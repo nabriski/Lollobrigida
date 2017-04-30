@@ -23,22 +23,41 @@ public abstract class AbstractBridge {
     }
 
     WebView wv;
-    String js_name;
+    String bridgeName;
     Handler mainHandler;
 
-    public AbstractBridge(WebView wv, String js_name){
+    public AbstractBridge(WebView wv, String bridgeName){
         mainHandler = new Handler(wv.getContext().getMainLooper());
-        wv.addJavascriptInterface(this,js_name);
+        wv.addJavascriptInterface(this,bridgeName);
         this.wv = wv;
-        this.js_name = js_name;
-        for(Method m : this.getClass().getMethods()){
-            if(m.getAnnotation(BridgeMethod.class)!=null){
-                String bindMethodURL = String.format("javascript:%s['%s'] = function(params,cb){ var cbId = String(parseInt(Math.random()*1000000)); %s[cbId] = cb; %s.call('%s',JSON.stringify(params),cbId) };",js_name,m.getName(),js_name,js_name,m.getName());
-                //Log.d("console",bindMethodURL);
-                //Log.d(LOG_TAG,bindMethodURL);
-                wv.loadUrl(bindMethodURL);
+        this.bridgeName = bridgeName;
+
+    }
+
+    @JavascriptInterface
+    protected void init(){
+
+        final AbstractBridge self = this;
+        Runnable readyRunnable = new Runnable() {
+
+            @Override
+            public void run() {
+                for(Method m : self.getClass().getMethods()){
+                    if(m.getAnnotation(BridgeMethod.class)!=null){
+                        String bindMethodURL = String.format("javascript:%s['%s'] = function(params,cb){ var cbId = String(parseInt(Math.random()*1000000)); %s[cbId] = cb; %s.call('%s',JSON.stringify(params),cbId) };", bridgeName,m.getName(), bridgeName, bridgeName,m.getName());
+                        //Log.d("console",bindMethodURL);
+                        //Log.d(LOG_TAG,bindMethodURL);
+                        wv.loadUrl(bindMethodURL);
+                    }
+                }
+
+                String onReadyURL = String.format("javascript:if(%s.onReady) %s.onReady();", bridgeName, bridgeName);
+                wv.loadUrl(onReadyURL);
             }
-        }
+        };
+
+        mainHandler.post(readyRunnable);
+
     }
 
     @JavascriptInterface
@@ -62,10 +81,10 @@ public abstract class AbstractBridge {
                                 if (result != null) resultStr = "'" + result.toString() + "'";
 
                                 //   wv.loadUrl("javascript:koko['xxx']()");
-                                String callbackURL = String.format("javascript:%s['%s'](JSON.parse(%s),JSON.parse(%s));", js_name, cbID, errStr, resultStr);
+                                String callbackURL = String.format("javascript:%s['%s'](JSON.parse(%s),JSON.parse(%s));", bridgeName, cbID, errStr, resultStr);
                                 //Log.d(LOG_TAG, callbackURL);
                                 wv.loadUrl(callbackURL);
-                                String cleanURL = String.format("javascript:delete %s['%s']", js_name, cbID);
+                                String cleanURL = String.format("javascript:delete %s['%s']", bridgeName, cbID);
                                 //Log.d(LOG_TAG, cleanURL);
                                 wv.loadUrl(cleanURL);
                             }

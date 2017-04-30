@@ -15,16 +15,8 @@ public class MainActivity extends AppCompatActivity {
         wv.getSettings().setJavaScriptEnabled(true);
 
         RandomQuoteBridge bridge = new RandomQuoteBridge(wv,"quotes");
-
-        String html = "<html><body>" +
-                        "<h1></h1>" +
-                        "</body></html>";
-
+        String html = getString(R.string.html);
         wv.loadData(html,"text/html",null);
-        String script =
-                "console.log(quotes.getQuote({},function(err,resp){document.querySelector('h1').innerHTML = resp.quote})";
-        //wv.loadData(html,"text/html",null);
-        wv.loadUrl("javascript:"+script);
 
     }
 }
