@@ -88,5 +88,3 @@ method2({param1:"some value"},function(err,resp){
 
 }
 ```
-
-```
