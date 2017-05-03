@@ -1,9 +1,9 @@
 # Lollobrigida
-Android WebView Bridge
+Android WebView Bridge - Call Java From The Android WebView
 
-# Usage
+## Usage
 
-## Java
+### Java
 
 ```java
 WebView wv = (WebView)findViewById(R.id.webview);
@@ -30,7 +30,7 @@ public class RandomQuoteBridge extends AbstractBridge {
     }
 
     @BridgeMethod
-    public void getQuote(JSONObject input,Callback cb) throws JSONException{
+    public void getQuote(Callback cb) throws JSONException{
         cb.onDone(
                 null,
                 new JSONObject(String.format("{\"quote\":\"%s\"}",quotes[(int)(Math.round(Math.random()*quotes.length))]))
@@ -40,7 +40,7 @@ public class RandomQuoteBridge extends AbstractBridge {
 }
 ```
 
-## HTML
+### HTML
 ```html
 <html>
    <body>
@@ -56,7 +56,7 @@ public class RandomQuoteBridge extends AbstractBridge {
             }
             
             function changeQuote(){
-                quotes.getQuote({},function(err,resp){
+                quotes.getQuote(function(err,resp){
                     document.querySelector("h1").innerHTML = resp.quote;
                     document.querySelector("h1").style.color = getRandomColor();
                 });
@@ -67,4 +67,24 @@ public class RandomQuoteBridge extends AbstractBridge {
         <a href="javascript:changeQuote()">Change Quote</a>
     </body>
 </html>
+```
+
+## API
+A bridged method can have one of the following signatures:
+```java
+@BridgeMethod
+public void method(Callback cb) throws JSONException;
+
+@BridgeMethod
+public void method2(JSONObject input,Callback cb) throws JSONException;
+```
+In javascript they are called as follows:
+```javascript
+method(function(err,resp){
+
+}
+
+method2({param1:"some value"},function(err,resp){
+
+}
 ```
