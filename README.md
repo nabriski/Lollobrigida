@@ -54,6 +54,7 @@ public class RandomQuoteBridge extends AbstractBridge {
                 }
                 return color;
             }
+            
             function changeQuote(){
                 quotes.getQuote({},function(err,resp){
                     document.querySelector("h1").innerHTML = resp.quote;
