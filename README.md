@@ -1,9 +1,9 @@
 # Lollobrigida
-Android WebView Bridge
+Android WebView Bridge - Call Java From The Android WebView
 
-# Usage
+## Usage
 
-## Java
+### Java
 
 ```java
 WebView wv = (WebView)findViewById(R.id.webview);
@@ -40,7 +40,7 @@ public class RandomQuoteBridge extends AbstractBridge {
 }
 ```
 
-## HTML
+### HTML
 ```html
 <html>
    <body>
@@ -67,4 +67,26 @@ public class RandomQuoteBridge extends AbstractBridge {
         <a href="javascript:changeQuote()">Change Quote</a>
     </body>
 </html>
+```
+
+## API
+A bridged method can have one of the following signatures:
+```java
+@BridgeMethod
+public void method(Callback cb) throws JSONException;
+
+@BridgeMethod
+public void method2(JSONObject input,Callback cb) throws JSONException;
+```
+In javascript they are called as follows:
+```javascript
+method(function(err,resp){
+
+}
+
+method2({param1:"some value"},function(err,resp){
+
+}
+```
+
 ```
