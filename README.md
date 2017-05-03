@@ -30,7 +30,7 @@ public class RandomQuoteBridge extends AbstractBridge {
     }
 
     @BridgeMethod
-    public void getQuote(JSONObject input,Callback cb) throws JSONException{
+    public void getQuote(Callback cb) throws JSONException{
         cb.onDone(
                 null,
                 new JSONObject(String.format("{\"quote\":\"%s\"}",quotes[(int)(Math.round(Math.random()*quotes.length))]))
@@ -56,7 +56,7 @@ public class RandomQuoteBridge extends AbstractBridge {
             }
             
             function changeQuote(){
-                quotes.getQuote({},function(err,resp){
+                quotes.getQuote(function(err,resp){
                     document.querySelector("h1").innerHTML = resp.quote;
                     document.querySelector("h1").style.color = getRandomColor();
                 });
