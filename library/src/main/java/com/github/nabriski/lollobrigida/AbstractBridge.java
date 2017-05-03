@@ -44,8 +44,18 @@ public abstract class AbstractBridge {
             public void run() {
                 for(Method m : self.getClass().getMethods()){
                     if(m.getAnnotation(BridgeMethod.class)!=null){
-                        String bindMethodURL = String.format("javascript:%s['%s'] = function(params,cb){ var cbId = String(parseInt(Math.random()*1000000)); %s[cbId] = cb; %s.call('%s',JSON.stringify(params),cbId) };", bridgeName,m.getName(), bridgeName, bridgeName,m.getName());
-                        //Log.d("console",bindMethodURL);
+                        String bindMethodURL;
+                        if(m.getParameterTypes().length == 1){
+                            bindMethodURL = String.format("javascript:%s['%s'] = function(cb){ var cbId = String(parseInt(Math.random()*1000000)); %s[cbId] = cb; %s.call('%s',null,cbId) };", bridgeName,m.getName(), bridgeName, bridgeName,m.getName());
+
+                        }
+                        else if(m.getParameterTypes().length == 2){
+                            bindMethodURL = String.format("javascript:%s['%s'] = function(params,cb){ var cbId = String(parseInt(Math.random()*1000000)); %s[cbId] = cb; %s.call('%s',JSON.stringify(params),cbId) };", bridgeName,m.getName(), bridgeName, bridgeName,m.getName());
+                        }
+                        else{
+                            throw new RuntimeException("bridged method must accept a JSONObject and Callback or only a Callback");
+                        }
+                         //Log.d("console",bindMethodURL);
                         //Log.d(LOG_TAG,bindMethodURL);
                         wv.loadUrl(bindMethodURL);
                     }
@@ -65,30 +75,44 @@ public abstract class AbstractBridge {
 
         try {
 
-            final Method m = this.getClass().getMethod(methodName,JSONObject.class, Callback.class);
+            Method m = null;
+            for(Method nextM : this.getClass().getMethods()){
+                if(nextM.getName().equals(methodName)){
+                    m = nextM;
+                    break;
+                }
+            }
+            final Method finalM = m;
+
             final String finParams = parameters;
             final AbstractBridge self = this;
             Runnable runCB = new Runnable() {
                 @Override
                 public void run() {
-                    try {
-                        m.invoke(self, new JSONObject(finParams), new Callback() {
-                            @Override
-                            public void onDone(JSONObject err, JSONObject result) {
-                                String errStr = "null";
-                                if (err != null) errStr = "'" + err.toString() + "'";
-                                String resultStr = "null";
-                                if (result != null) resultStr = "'" + result.toString() + "'";
+                    Callback cb = new Callback() {
+                        @Override
+                        public void onDone(JSONObject err, JSONObject result) {
+                            String errStr = "null";
+                            if (err != null) errStr = "'" + err.toString() + "'";
+                            String resultStr = "null";
+                            if (result != null) resultStr = "'" + result.toString() + "'";
 
-                                //   wv.loadUrl("javascript:koko['xxx']()");
-                                String callbackURL = String.format("javascript:%s['%s'](JSON.parse(%s),JSON.parse(%s));", bridgeName, cbID, errStr, resultStr);
-                                //Log.d(LOG_TAG, callbackURL);
-                                wv.loadUrl(callbackURL);
-                                String cleanURL = String.format("javascript:delete %s['%s']", bridgeName, cbID);
-                                //Log.d(LOG_TAG, cleanURL);
-                                wv.loadUrl(cleanURL);
-                            }
-                        });
+                            //   wv.loadUrl("javascript:koko['xxx']()");
+                            String callbackURL = String.format("javascript:%s['%s'](JSON.parse(%s),JSON.parse(%s));", bridgeName, cbID, errStr, resultStr);
+                            //Log.d(LOG_TAG, callbackURL);
+                            wv.loadUrl(callbackURL);
+                            String cleanURL = String.format("javascript:delete %s['%s']", bridgeName, cbID);
+                            //Log.d(LOG_TAG, cleanURL);
+                            wv.loadUrl(cleanURL);
+                        }
+                    };
+                    try {
+                        if(finalM.getParameterTypes().length == 1){
+                            finalM.invoke(self,cb);
+                        }
+                        else if(finalM.getParameterTypes().length == 2){
+                            finalM.invoke(self,new JSONObject(finParams),cb);
+                        }
                     } catch (Exception e) {
                         Log.e(LOG_TAG,"Error",e);
                     }

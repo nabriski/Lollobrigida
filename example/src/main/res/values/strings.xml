@@ -15,7 +15,7 @@
                         return color;
                     }
                     function changeQuote(){
-                        quotes.getQuote({},function(err,resp){
+                        quotes.getQuote(function(err,resp){
                             document.querySelector(\"h1\").innerHTML = resp.quote;
                             document.querySelector(\"h1\").style.color = getRandomColor();
                         });
